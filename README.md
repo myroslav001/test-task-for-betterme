@@ -15,7 +15,7 @@
 - Satus code `200 OK`
 - The response contains updated data for `name`, `status` and `tags`
 - The `id` remains unchanged
-
+---
 **TC02** - Updated without the `status` field
 
 **Steps:**
@@ -26,7 +26,7 @@
 **Expected Result:**
 - Api returns `200 OK`
 - When using a `GET` request, status is missing from the response
-
+---
 **TC03** - Updated with an empty `tags` array
 
 **Steps:**
@@ -38,7 +38,7 @@
 **Expected Result:**
 - Tags are removed from the pet
 - Api returns `200 OK`
-
+---
 **TC04** - Replace tags with `"unknownHamster"`
 
 **Steps:**
@@ -51,7 +51,7 @@
 - The response contains exactly one tag
 - The tag has `id = 99` and `name = "unknownHamster"`
 - Status code is `200 OK`
-
+---
 **TC05** - Updated a non-exisping pet
 
 **Steps:**
@@ -62,7 +62,7 @@
 **Expected Result:**
 - Status code is `200 OK`
 - A new pet is created with the provided `id` and data
-
+---
 **TC06** - Update with invalid `tag` format (missing id)
 
 **Steps:**
@@ -76,7 +76,7 @@
 - The returned `tags` array contains a single tag with:
     - `name = "brokenTag"`
     - `id = 0` (automatically assigned by the system)
- 
+ ---
 **TC07** - Update with special characters in the name 
 
 **Steps:**
@@ -88,7 +88,7 @@
 **Expected Result:**
 - Status code is `200 OK`
 - The special characters are preserved in the response
-
+---
 **TC08** -  Update with a very long `name` (300+ characters)
 
 **Steps:**
@@ -100,7 +100,7 @@
 **Expected Result:**
 - Status code is `200 OK`
 - The long `name` is saved and returned in the response as provided
-
+---
 **TC09** - Update with an empty request body
 
 **Steps:**
@@ -112,7 +112,7 @@
 - Status code is `200 OK`
 - The response body contains default values:
   <pre> json { "id": 9223372036854775807, "photoUrls": [], "tags": [] } </pre>
-
+---
 **TC10** - Update with a name that already exists for another pet
 
 **Steps:**
