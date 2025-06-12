@@ -1,0 +1,353 @@
+{
+	"info": {
+		"_postman_id": "a3134f0a-3211-4303-8876-4274c48e8b68",
+		"name": "Petstore Manual QA Test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15542163"
+	},
+	"item": [
+		{
+			"name": "Create Pet",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Масив статусів \r",
+							"const statuses  = [\"sold\", \"adopted\", \"sick\"];\r",
+							"\r",
+							"let index = parseInt(pm.environment.get(\"createStatusIndex\")) || 0; \r",
+							"\r",
+							"// Обираємо статус по індексу \r",
+							"const selectedStatus = statuses[index];\r",
+							"pm.environment.set(\"createStatus\", selectedStatus);\r",
+							"\r",
+							"// Циклічне оновлення індексу \r",
+							"index = (index + 1) % statuses.length;\r",
+							"pm.environment.set(\"createStatusIndex\", index);\r",
+							"\r",
+							"// Генерація ID і імені (тваринку на фото звати Тайлер і це мій хомʼяк)\r",
+							"const petId = Math.floor(Math.random() * 10000);\r",
+							"const names = [\"Tyler\", \"Homa\", \"Fluffy\"];\r",
+							"const petName = names[Math.floor(Math.random() * names.length)];\r",
+							"// Встановлюємо значення в змінні середовища \r",
+							"pm.environment.set(\"petId\", petId);\r",
+							"pm.environment.set(\"petName\", petName);\r",
+							"\r",
+							"// Генерація випадкових тегів (від 1 до 3)\r",
+							"const allTags = [\r",
+							"  { id: 1, name: \"hamster\" },\r",
+							"  { id: 2, name: \"bigHamster\" },\r",
+							"  { id: 3, name: \"cuteHamster\" }\r",
+							"];\r",
+							"\r",
+							"// Випадковий вибір кількох тегів\r",
+							"function getRandomTags(source) {\r",
+							"  const selected = [];\r",
+							"  const tagCount = Math.floor(Math.random() * source.length) + 1; // 1 to 3\r",
+							"  const shuffled = source.sort(() => 0.5 - Math.random());\r",
+							"  for (let i = 0; i < tagCount; i++) {\r",
+							"    selected.push(shuffled[i]);\r",
+							"  }\r",
+							"  return selected;\r",
+							"}\r",
+							"\r",
+							"const randomTags = getRandomTags(allTags);\r",
+							"pm.environment.set(\"petTags\", JSON.stringify(randomTags));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const jsonData = pm.response.json();\r",
+							"const photoUrls = jsonData.photoUrls;\r",
+							"\r",
+							"// Тест для перевірки статусу відповіді\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// Тест для перевірки правильності створення нового пета\r",
+							"pm.test(\"Pet name is correct\", function () {\r",
+							"    pm.expect(jsonData.name).to.eql(pm.environment.get(\"petName\"));\r",
+							"});\r",
+							"\r",
+							"// Тест для перевірки травильності створення ID\r",
+							"pm.test(\"Pet ID is correct\", function () {\r",
+							"    pm.expect(jsonData.id).to.eql(parseInt(pm.environment.get(\"petId\")));\r",
+							"});\r",
+							"\r",
+							"// Тест для перевірки що URL не пустий\r",
+							"pm.test(\"Photo URLs is an array and not empty\", function () {\r",
+							"    pm.expect(photoUrls).to.be.an(\"array\").that.is.not.empty;\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Tags are present and valid\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.tags).to.be.an(\"array\").that.is.not.empty;\r",
+							"    });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"{{petId}}\",\r\n    \"name\": \"{{petName}}\",\r\n    \"photoUrls\": [\r\n        \"https://imgur.com/a/M8MMonV\"\r\n    ],\r\n    \"tags\": {{petTags}},\r\n    \"status\": \"{{createStatus}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pet",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"// Перевірка, що запит пройшов успішно\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// Перевіряємо, що ID у відповіді відповідає тому, який ми передали\r",
+							"pm.test(\"Pet ID matches requested ID\", function () {\r",
+							"    const expectedId = parseInt(pm.environment.get(\"petId\"));\r",
+							"    pm.expect(jsonData.id).to.eql(expectedId);\r",
+							"});\r",
+							"\r",
+							"// Перевіряємо, що ім’я тварини збігається з тим, яке ми згенерували\r",
+							"pm.test(\"Pet name is correct\", function () {\r",
+							"    const expectedName = pm.environment.get(\"petName\");\r",
+							"    pm.expect(jsonData.name).to.eql(expectedName);\r",
+							"});\r",
+							"\r",
+							"// Перевіряємо, що статус пета такий, як ми його встановили\r",
+							"pm.test(\"Pet status is correct\", function () {\r",
+							"    const expectedStatus = pm.environment.get(\"createStatus\") || pm.environment.get(\"status\");\r",
+							"    pm.expect(jsonData.status).to.eql(expectedStatus);\r",
+							"});\r",
+							"\r",
+							"// Перевірка, що у тварини хоча б одне фото (не порожній масив photoUrls)\r",
+							"pm.test(\"Pet has at least one photo\", function () {\r",
+							"    pm.expect(jsonData.photoUrls.length).to.be.above(0);\r",
+							"});\r",
+							"\r",
+							"// Тест, що запит поверне статус 404 (Not Found)\r",
+							"pm.test(\"Pet no longer exists (404 Not Found)\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pet/{{petId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Pet",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Отримання поточного ім’я тварини\r",
+							"const petName = pm.environment.get(\"petName\");\r",
+							"\r",
+							"if (petName) {\r",
+							"    const updatedPetName = petName + \"_Updated\";\r",
+							"    pm.environment.set(\"updatedPetName\", updatedPetName);\r",
+							"} \r",
+							"\r",
+							"// Отримання індексу з середовища\r",
+							"let index = parseInt(pm.environment.get(\"statusIndex\")) || 0;\r",
+							"\r",
+							"// Масив статусів \r",
+							"const statuses  = [\"sold\", \"adopted\", \"sick\"];\r",
+							"\r",
+							"// Обираємо статус по індексу \r",
+							"const selectedStatus = statuses[index];\r",
+							"pm.environment.set(\"status\", selectedStatus);\r",
+							"\r",
+							"// Циклічне оновлення індексу \r",
+							"index = (index + 1) % statuses.length;\r",
+							"pm.environment.set(\"statusIndex\", index);\r",
+							"\r",
+							"// Оновлення тегу тварини\r",
+							"const updateTags = [\r",
+							"  {\r",
+							"    id: 99,\r",
+							"    name: \"unknownHamster\"\r",
+							"  }\r",
+							"];\r",
+							"pm.environment.set(\"updateTags\", JSON.stringify(updateTags));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseData = pm.response.json();\r",
+							"\r",
+							"// Fixed reference to responseData\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// тест, що ім'я пета оновлене\r",
+							"pm.test(\"Pet name was updated\", function () {\r",
+							"    const expectedName = pm.environment.get(\"updatedPetName\");\r",
+							"    pm.expect(responseData.name).to.eql(expectedName);\r",
+							"});\r",
+							"\r",
+							"// Тест статус пета відповідає очікуваному\r",
+							"pm.test(\"Pet status is correct\", function () {\r",
+							"    const expectedStatus = pm.environment.get(\"status\");\r",
+							"    pm.expect(responseData.status).to.eql(expectedStatus);\r",
+							"});\r",
+							"\r",
+							"// Тест чи фото URL є дійсним URL\r",
+							"pm.test(\"Photo URL is a valid URL\", function () {\r",
+							"    const url = pm.response.json().photoUrls[0];\r",
+							"    pm.expect(url).to.match(/^https?:\\/\\/.+/);\r",
+							"});\r",
+							"\r",
+							"// Тест, що ім'я не містить спеціальних символів\r",
+							"pm.test(\"Name does not contain special characters\", function () {\r",
+							"    const name = pm.response.json().name;\r",
+							"    pm.expect(name).to.match(/^[a-zA-Zа-яА-Я0-9_\\-]+$/);\r",
+							"});\r",
+							"\r",
+							"// Тест, що пет має тільки один тег: unknownHamster\r",
+							"pm.test(\"Pet has only one tag: unknownHamster\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": {{petId}},\r\n    \"name\": \"{{updatedPetName}}\",\r\n    \"photoUrls\": [\"https://imgur.com/a/M8MMonV\"],\r\n    \"tags\": {{updateTags}},\r\n    \"status\": \"{{status}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pet",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// тест, що запит на видалення повертає статус 200\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// Перевіряємо, що відповідь містить ID видаленого пета (як підтвердження)\r",
+							"pm.test(\"Response includes correct pet ID\", function () {\r",
+							"    const responseText = pm.response.text();\r",
+							"    const expectedId = pm.environment.get(\"petId\");\r",
+							"    pm.expect(responseText).to.include(expectedId.toString());\r",
+							"});\r",
+							"\r",
+							"// Тест перевіряє, що після видалення, запит на отримання інформації про пета повертає статус 404, що підтверджує його видалення.\r",
+							"pm.test(\"Pet no longer exists (404 after delete)\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pet/{{petId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
