@@ -5,7 +5,7 @@
 **Precondition:** A pet has been previously created using `POST /pet`
 
 **Steps:**
-1. Retrieve and store the `id` od the created pet
+1. Retrieve and store the `id` of the created pet
 2. Send a `PUT` requst with updated fields:
     - New `name` (e.g. `Fluffy_Update`)
     - New `status` (e.g. `sold`)
