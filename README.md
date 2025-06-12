@@ -1,6 +1,7 @@
 # test-task-for-betterme
 
 **TC01** - Successful pet update
+
 **Precondition:** A pet has been previously created using `POST /pet`
 
 **Steps:**
